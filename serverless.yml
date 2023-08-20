@@ -1,0 +1,96 @@
+
+app: newb
+service: backguy
+frameworkVersion: '3'
+
+provider:
+  name: aws
+  runtime: nodejs18.x
+  stage: dev
+  environment:
+    BUCKET_NAME: ${self:service}-publicc-photos-${self:provider.stage}
+    PHOTOS_TABLE: ${self:service}-rekognitionn-photos-${self:provider.stage}
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - "s3:GetObject"
+        - "s3:PutObject"
+      Resource: "arn:aws:s3:::${self:service}-publicc-photos-${self:provider.stage}/*"
+    - Effect: Allow
+      Action:
+        - "rekognition:SearchFacesByImage"
+        - "rekognition:IndexFaces"
+      Resource: "*"
+    - Effect: Allow
+      Action:
+        - "dynamodb:PutItem"
+        - "dynamodb:Get*"
+        - "dynamodb:Scan*"
+        - "dynamodb:Query*"
+        - "dynamodb:UpdateItem"
+        - "dynamodb:DeleteItem"
+      Resource: "arn:aws:dynamodb:*:*:table/${self:service}-rekognitionn-photos-${self:provider.stage}"
+
+functions:
+  indexFaces:
+    handler: Functions/savePhoto.indexFaces
+    timeout: 28
+    events:
+      - httpApi:
+          path: /
+          method: post
+  recognizeFaces:
+    handler: Functions/savePhoto.recognizeFaces
+    timeout: 28
+    events:
+      - httpApi:
+          path: /index
+          method: post
+
+  getPhotos:
+    handler: Functions/getPhotos.getPhotos
+    events:
+      - httpApi:
+          path: /
+          method: get
+     
+      
+
+
+resources:
+  Resources:
+    PhotoTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:service}-rekognitionn-photos-${self:provider.stage}
+        AttributeDefinitions:
+          - AttributeName: ExternalImageId
+            AttributeType: S
+        KeySchema:
+          - AttributeName: ExternalImageId
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+
+    PhotoBucket:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: ${self:service}-publicc-photos-${self:provider.stage}
+
+    PhotoBucketAllowPublicReadPolicy:
+      Type: AWS::S3::BucketPolicy
+      Properties:
+        Bucket: !Ref PhotoBucket
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Action:
+                - "s3:GetObject"
+              Resource: 
+                - !Join ['/', [!GetAtt [PhotoBucket, Arn], '*']]
+              Principal: "*"
+
+plugins:
+  - serverless-offline
