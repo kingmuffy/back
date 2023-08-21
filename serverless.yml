@@ -39,6 +39,7 @@ functions:
       - httpApi:
           path: /
           method: post
+          cors: true
   recognizeFaces:
     handler: Functions/savePhoto.recognizeFaces
     timeout: 28
@@ -46,6 +47,7 @@ functions:
       - httpApi:
           path: /index
           method: post
+          cors: true
 
   getPhotos:
     handler: Functions/getPhotos.getPhotos

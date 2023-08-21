@@ -57,6 +57,10 @@ module.exports.indexFaces = async (event) => {
   const result = await rekognition.indexFaces(params).promise();
   return {
     statusCode: 200,
+    headers: {
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Credentials": true,
+    },
     body: JSON.stringify({ ...result, imageUrl }),
   };
 };
@@ -94,12 +98,20 @@ module.exports.recognizeFaces = async (event) => {
 
     return {
       statusCode: 200,
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Credentials": true,
+      },
       body: JSON.stringify({ faces: recognizedFaces }), // No need to filter faces here
     };
   } catch (error) {
     console.error("Error processing image:", error);
     return {
       statusCode: 500,
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Credentials": true,
+      },
       body: JSON.stringify({ error: "An error occurred while processing the image." }),
     };
   }

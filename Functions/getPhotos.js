@@ -12,11 +12,19 @@ module.exports.getPhotos = async () => {
       const result = await dynamodb.scan(dbParams).promise();
       return {
         statusCode: 200,
+        headers: {
+          "Access-Control-Allow-Origin": "*",
+          "Access-Control-Allow-Credentials": true,
+        },
         body: JSON.stringify(formatPhotoResponse(result.Items)),
       };
     } catch (error) {
       console.error("Error fetching photos:", error);
       return {
+        headers: {
+          "Access-Control-Allow-Origin": "*",
+          "Access-Control-Allow-Credentials": true,
+        },
         statusCode: 500,
         body: JSON.stringify({ error: "An error occurred while fetching the photos." }),
       };
